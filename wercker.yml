@@ -1,5 +1,6 @@
 box: wercker/python
 # Build definition
+
 build:
   # The steps that will be executed on build
   steps:
@@ -12,3 +13,32 @@ build:
         name: python unit test
         code: |
           python app_test.py
+
+deploy:
+  steps:
+    
+    - add-to-known_hosts:
+        hostname: $SERVER_HOSTNAME
+
+    - add-ssh-key:
+        keyname: $DOKKUTK
+
+    - script:
+        name: Initialize new repository
+        code: |
+          rm -rf .git
+          git init
+          git config --global user.name "baseboxorg"
+          git config --global user.email "developer@basebox.org"
+          git remote add dokku dokku@$SERVER_HOSTNAME:getting-started-python
+
+    - script:
+        name: Add everything to the repository
+        code: |
+          git add .
+          git commit -m "Result of deploy $WERCKER_GIT_COMMIT"
+
+    - script:
+        name: Push to dokku
+        code: |
+          git push dokku master
